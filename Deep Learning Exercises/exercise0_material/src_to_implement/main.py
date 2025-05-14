@@ -7,7 +7,7 @@ from pattern import Spectrum
 from generator import ImageGenerator
 
 
-part = input("Enter the Exercise-0, Question-1 part, as 1.X or Question 2 as 2: ")
+part = input("Enter the Question 1 with 1.X and Question 2: ")
 
 if part == "1.2":
     tile_size_1 = int(input("tile_size for Checker: "))
@@ -34,3 +34,9 @@ elif part == "1.4":
     resolution_3 = int(input("resolution for Spectrum: "))
     Q14 = Spectrum(resolution_3)
     Q14.show()
+
+elif part == "2": 
+    x = ImageGenerator("exercise_data", "Labels.json", 10, (32,32,3), True, True, True)
+    x.show()
+else:
+    print("Please choose between 1.2, 1.3, 1.4, 2")
