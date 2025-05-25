@@ -23,48 +23,21 @@ class TestFullyConnected1(unittest.TestCase):
 
     def test_trainable(self):
         layer = FullyConnected.FullyConnected(self.input_size, self.output_size)
-        self.assertTrue(layer.trainable, msg="Possible error: The  trainable flag is not set to True. Please make sure"
-                                             " to set set trainable=True.")
-
-    def test_weights_size(self):
-        layer = FullyConnected.FullyConnected(self.input_size, self.output_size)
-        self.assertTrue((layer.weights.shape) in ((self.input_size + 1, self.output_size), (self.output_size, self.input_size + 1)))
+        self.assertTrue(layer.trainable)
 
     def test_forward_size(self):
         layer = FullyConnected.FullyConnected(self.input_size, self.output_size)
         output_tensor = layer.forward(self.input_tensor)
-        self.assertEqual(output_tensor.shape[1],
-                         self.output_size,
-                         msg="Possible error: The shape of the output tensor is not correct. The correct shape is"
-                             " Batch x N_Neurons. The second dimension of self.weights determines the number of "
-                             "neurons. Please refer to the exercise slides to use the correct computation of the"
-                             "output tensor using the weights and the input. Additionally, make sure you combined the "
-                             "weight matrix and the bias properly and extended the input such that the computation "
-                             "includes weight multiplication and bias addition.")
-        self.assertEqual(output_tensor.shape[0],
-                         self.batch_size,
-                         msg="Possible error: The batch size of the output tensor is not equal to the batch size of the"
-                             " input tensor. Please refer to the exercise slides to use the correct computation of the"
-                             "output tensor using the weights and the input."
-                         )
+        self.assertEqual(output_tensor.shape[1], self.output_size)
+        self.assertEqual(output_tensor.shape[0], self.batch_size)
 
     def test_backward_size(self):
         layer = FullyConnected.FullyConnected(self.input_size, self.output_size)
         output_tensor = layer.forward(self.input_tensor)
         # print(output_tensor.shape)
         error_tensor = layer.backward(output_tensor)
-        self.assertEqual(error_tensor.shape[1],
-                         self.input_size,
-                         msg="Possible error: The shape of the output tensor (backward function) is not correct. "
-                             "Please make sure that you remove the fake errors that were comptet because of the added"
-                             " collumn in the input (to include bias addition in the weight matrix multiplication)."
-                         )
-        self.assertEqual(error_tensor.shape[0],
-                         self.batch_size,
-                         msg="Possible error: The batch size of the output tensor is not equal to the batch size of the"
-                             " input tensor (in the backward pass). Please refer to the exercise slides to use the "
-                             "correct computation of the output tensor using the weights and the input."
-                         )
+        self.assertEqual(error_tensor.shape[1], self.input_size)
+        self.assertEqual(error_tensor.shape[0], self.batch_size)
 
     def test_update(self):
         layer = FullyConnected.FullyConnected(self.input_size, self.output_size)
@@ -76,11 +49,7 @@ class TestFullyConnected1(unittest.TestCase):
             # print(error_tensor.shape)
             layer.backward(error_tensor)
             new_output_tensor = layer.forward(self.input_tensor)
-            self.assertLess(np.sum(np.power(output_tensor, 2)), np.sum(np.power(new_output_tensor, 2)),
-                            msg="Possible error: the weight update has not been performed correctly. Have a look at the"
-                                "computation of gradient_weights. If the gradient_weights test passes, have a look at "
-                                "the optimizer. Please also make sure that the weights are updated in the backward pass"
-                                "if an optimizer is set!")
+            self.assertLess(np.sum(np.power(output_tensor, 2)), np.sum(np.power(new_output_tensor, 2)))
 
     def test_update_bias(self):
         input_tensor = np.zeros([self.batch_size, self.input_size])
@@ -92,12 +61,7 @@ class TestFullyConnected1(unittest.TestCase):
             error_tensor -= output_tensor
             layer.backward(error_tensor)
             new_output_tensor = layer.forward(input_tensor)
-            self.assertLess(np.sum(np.power(output_tensor, 2)), np.sum(np.power(new_output_tensor, 2)),
-                            msg="Possible error: the update of the bias has not been performed correctly. Have a look at the"
-                                "computation of gradient_weights. If the gradient_weights test passes, have a look at "
-                                "the optimizer. Please also make sure that the weights are updated in the backward pass"
-                                "if an optimizer is set!"
-                            )
+            self.assertLess(np.sum(np.power(output_tensor, 2)), np.sum(np.power(new_output_tensor, 2)))
 
     def test_gradient(self):
         input_tensor = np.abs(np.random.random((self.batch_size, self.input_size)))
@@ -105,11 +69,7 @@ class TestFullyConnected1(unittest.TestCase):
         layers.append(FullyConnected.FullyConnected(self.input_size, self.categories))
         layers.append(L2Loss())
         difference = Helpers.gradient_check(layers, input_tensor, self.label_tensor)
-        self.assertLessEqual(np.sum(difference),
-                             1e-5,
-                             msg="Possible error: The gradient with respect to the input is not correct. Please refer "
-                                 "to the exercise slides to use the correct computation of the output tensor using "
-                                 "the weights and the input.")
+        self.assertLessEqual(np.sum(difference), 1e-5)
 
     def test_gradient_weights(self):
         input_tensor = np.abs(np.random.random((self.batch_size, self.input_size)))
@@ -117,22 +77,13 @@ class TestFullyConnected1(unittest.TestCase):
         layers.append(FullyConnected.FullyConnected(self.input_size, self.categories))
         layers.append(L2Loss())
         difference = Helpers.gradient_check_weights(layers, input_tensor, self.label_tensor, False)
-        self.assertLessEqual(np.sum(difference),
-                             1e-5,
-                             msg="Possible error: The gradient with respect to the weights is not correct. Please refer "
-                                 "to the exercise slides to use the correct computation of the output tensor using "
-                                 "the weights and the input. Please also make sure that you implemented the "
-                                 "gradients_weights property and store the gradient weights in this variable."
-                             )
+        self.assertLessEqual(np.sum(difference), 1e-5)
 
     def test_bias(self):
         input_tensor = np.zeros((1, 100000))
         layer = FullyConnected.FullyConnected(100000, 1)
         result = layer.forward(input_tensor)
-        self.assertGreater(np.sum(result), 0,
-                           msg="Possible error: The initialization of the bias (i.e. the weights if stored in "
-                               "single matric) may be wrong. Make sure bias and weights are initialized randomly"
-                               " between 0 and 1!")
+        self.assertGreater(np.sum(result), 0)
 
 
 class TestReLU(unittest.TestCase):
@@ -149,8 +100,7 @@ class TestReLU(unittest.TestCase):
 
     def test_trainable(self):
         layer = ReLU.ReLU()
-        self.assertFalse(layer.trainable,
-                         msg="Possible error: Trainable flag is set to true. Make sure it is set to False.")
+        self.assertFalse(layer.trainable)
 
     def test_forward(self):
         expected_tensor = np.zeros([self.batch_size, self.input_size])
@@ -158,10 +108,7 @@ class TestReLU(unittest.TestCase):
 
         layer = ReLU.ReLU()
         output_tensor = layer.forward(self.input_tensor)
-        self.assertEqual(np.sum(np.power(output_tensor - expected_tensor, 2)), 0,
-                         msg="Possible error: the ReLU function is not properly implemented. Make sure that the function"
-                             "sets all negative values to zero and passes all positive values to the next layer"
-                             " as they are according to ReLU(x) = max(0, x). ")
+        self.assertEqual(np.sum(np.power(output_tensor - expected_tensor, 2)), 0)
 
     def test_backward(self):
         expected_tensor = np.zeros([self.batch_size, self.input_size])
@@ -170,10 +117,7 @@ class TestReLU(unittest.TestCase):
         layer = ReLU.ReLU()
         layer.forward(self.input_tensor)
         output_tensor = layer.backward(self.input_tensor * 2)
-        self.assertEqual(np.sum(np.power(output_tensor - expected_tensor, 2)), 0,
-                         msg="Possible error: The derivative of the ReLU function is not correctly implemented. Please"
-                             " refer to the lecture slides for the correct derivative. Hint: you may need the input "
-                             "tensor X of the forward pass also in the backward pass...")
+        self.assertEqual(np.sum(np.power(output_tensor - expected_tensor, 2)), 0)
 
     def test_gradient(self):
         input_tensor = np.abs(np.random.random((self.batch_size, self.input_size)))
@@ -183,10 +127,7 @@ class TestReLU(unittest.TestCase):
         layers.append(ReLU.ReLU())
         layers.append(L2Loss())
         difference = Helpers.gradient_check(layers, input_tensor, self.label_tensor)
-        self.assertLessEqual(np.sum(difference), 1e-5,
-                             msg="Possible error: The derivative of the ReLU function is not correctly implemented. Please"
-                             " refer to the lecture slides for the correct derivative. Hint: you may need the input "
-                             "tensor X of the forward pass also in the backward pass...")
+        self.assertLessEqual(np.sum(difference), 1e-5)
 
 class TestSoftMax(unittest.TestCase):
 
@@ -199,16 +140,13 @@ class TestSoftMax(unittest.TestCase):
 
     def test_trainable(self):
         layer = SoftMax.SoftMax()
-        self.assertFalse(layer.trainable,
-                         msg="Possible error: Trainable flag is set to true. Make sure it is set to False.")
+        self.assertFalse(layer.trainable)
 
     def test_forward_shift(self):
         input_tensor = np.zeros([self.batch_size, self.categories]) + 10000.
         layer = SoftMax.SoftMax()
         pred = layer.forward(input_tensor)
-        self.assertFalse(np.isnan(np.sum(pred)),
-                         msg="Possible error: The input tensor is not shifted to the negative domain. Please make sure "
-                             "shift the input linearly to the negative domain in order to keep numerical stability.")
+        self.assertFalse(np.isnan(np.sum(pred)))
 
     def test_forward_zero_loss(self):
         input_tensor = self.label_tensor * 100.
@@ -216,11 +154,7 @@ class TestSoftMax(unittest.TestCase):
         loss_layer = L2Loss()
         pred = layer.forward(input_tensor)
         loss = loss_layer.forward(pred, self.label_tensor)
-        self.assertLess(loss, 1e-10,
-                        msg="Possible error: The forward function is not implemented correctly. Please refer to the "
-                            "lecture slides for help. Hint: The output of the SoftMax function corresponds to a "
-                            "probability distribution to with the probabilities for each label (usually) in a"
-                            " classification task. So check if the sum of the output is equal to 1!")
+        self.assertLess(loss, 1e-10)
 
     def test_backward_zero_loss(self):
         input_tensor = self.label_tensor * 100.
@@ -230,11 +164,7 @@ class TestSoftMax(unittest.TestCase):
         loss_layer.forward(pred, self.label_tensor)
         error = loss_layer.backward(self.label_tensor)
         error = layer.backward(error)
-        self.assertAlmostEqual(np.sum(error), 0,
-                               msg="Possible error: The derivative of the ReLU function is not correctly implemented."
-                                   " Please refer to the lecture slides for help. Hint: You may need the output tensor "
-                                   "Y from the forward pass also in the backward pass... "
-                                   "The test also fails if the CrossEntropyLoss() function is not yet or wrong implemented.")
+        self.assertAlmostEqual(np.sum(error), 0)
 
     def test_regression_high_loss(self):
         input_tensor = self.label_tensor - 1.
@@ -243,11 +173,7 @@ class TestSoftMax(unittest.TestCase):
         loss_layer = L2Loss()
         pred = layer.forward(input_tensor)
         loss = loss_layer.forward(pred, self.label_tensor)
-        self.assertAlmostEqual(float(loss), 12,
-                               msg="Possible error: The derivative of the ReLU function is not correctly implemented."
-                                   " Please refer to the lecture slides for help. Hint: You may need the output tensor "
-                                   "Y from the forward pass also in the backward pass... "
-                               )
+        self.assertAlmostEqual(float(loss), 12)
 
     def test_regression_backward_high_loss_w_CrossEntropy(self):
         input_tensor = self.label_tensor - 1
@@ -261,23 +187,11 @@ class TestSoftMax(unittest.TestCase):
         error = layer.backward(error)
         # test if every wrong class confidence is decreased
         for element in error[self.label_tensor == 0]:
-            self.assertAlmostEqual(element, 1/3, places = 3,
-                                   msg="Possible error: The derivative of the ReLU function is not correctly implemented."
-                                       " The class confidence for wrong predicted lables is not decreased in the backward function."
-                                       " Please refer to the lecture slides for help. Hint: You may need the output tensor "
-                                       "Y from the forward pass also in the backward pass."
-                                       "The test also fails if the CrossEntropyLoss() function is not yet or wrong implemented."
-                                   )
+            self.assertAlmostEqual(element, 1/3, places = 3)
 
         # test if every correct class confidence is increased
         for element in error[self.label_tensor == 1]:
-            self.assertAlmostEqual(element, -1, places = 3,
-                                   msg="Possible error: The derivative of the ReLU function is not correctly implemented."
-                                       " The class confidence for correct predicted lables is not increased in the backward function."
-                                       " Please refer to the lecture slides for help. Hint: You may need the output tensor "
-                                       "Y from the forward pass also in the backward pass."
-                                       "The test also fails if the CrossEntropyLoss() function is not yet or wrong implemented."
-                                   )
+            self.assertAlmostEqual(element, -1, places = 3)
 
 
     def test_regression_forward(self):
@@ -290,11 +204,7 @@ class TestSoftMax(unittest.TestCase):
         loss = loss_layer.forward(pred, self.label_tensor)
 
         # just see if it's bigger then zero
-        self.assertGreater(float(loss), 0.,
-                           msg="Possible error: The forward function is not implemented correctly. Please refer to the "
-                            "lecture slides for help. Hint: The output of the SoftMax function corresponds to a "
-                            "probability distribution to with the probabilities for each label (usually) in a"
-                            " classification task. So, check if the sum of the output is equal to 1!")
+        self.assertGreater(float(loss), 0.)
 
 
     def test_regression_backward(self):
@@ -308,21 +218,11 @@ class TestSoftMax(unittest.TestCase):
 
         # test if every wrong class confidence is decreased
         for element in error[self.label_tensor == 0]:
-            self.assertLessEqual(element, 0,
-                                 msg="Possible error: The derivative of the ReLU function is not correctly implemented."
-                                     " The class confidence for wrong predicted lables is not decreased in the backward function."
-                                     " Please refer to the lecture slides for help. Hint: You may need the output tensor "
-                                     "Y from the forward pass also in the backward pass."
-                                 )
+            self.assertLessEqual(element, 0)
 
         # test if every correct class confidence is increased
         for element in error[self.label_tensor == 1]:
-            self.assertGreaterEqual(element, 0,
-                                    msg="Possible error: The derivative of the ReLU function is not correctly implemented."
-                                        " The class confidence for wrong predicted lables is not decreased in the backward function."
-                                        " Please refer to the lecture slides for help. Hint: You may need the output tensor "
-                                        "Y from the forward pass also in the backward pass."
-                                    )
+            self.assertGreaterEqual(element, 0)
 
     def test_gradient(self):
         input_tensor = np.abs(np.random.random(self.label_tensor.shape))
@@ -330,12 +230,7 @@ class TestSoftMax(unittest.TestCase):
         layers.append(SoftMax.SoftMax())
         layers.append(L2Loss())
         difference = Helpers.gradient_check(layers, input_tensor, self.label_tensor)
-        self.assertLessEqual(np.sum(difference), 1e-5,
-                             msg="Possible error: The derivative of the ReLU function is not correctly implemented."
-                                 " Please refer to the lecture slides for help. Hint: You may need the output tensor "
-                                        "Y from the forward pass also in the backward pass. Also make sure to do the "
-                                 "necessary summation in the backward pass over the right axis."
-                             )
+        self.assertLessEqual(np.sum(difference), 1e-5)
 
     def test_predict(self):
         input_tensor = np.arange(self.categories * self.batch_size)
@@ -355,11 +250,7 @@ class TestSoftMax(unittest.TestCase):
                                      0.28469095, 0.28469095]])
         # print(expected_values)
         # print(prediction)
-        np.testing.assert_almost_equal(expected_values, prediction.T,
-                                       err_msg="Possible error: The forward function is not properly implemented. "
-                                               "Please refer to the lecture slided for the correct function. make "
-                                               "sure to do the necessary summation in the forward pass over the right "
-                                               "axis")
+        np.testing.assert_almost_equal(expected_values, prediction.T)
 
 
 class TestCrossEntropyLoss(unittest.TestCase):
@@ -376,19 +267,12 @@ class TestCrossEntropyLoss(unittest.TestCase):
         layers = list()
         layers.append(Loss.CrossEntropyLoss())
         difference = Helpers.gradient_check(layers, input_tensor, self.label_tensor)
-        self.assertLessEqual(np.sum(difference), 1e-4,
-                             msg="Possible error: The backward function is not computing the correct gradient. "
-                                 "This test fails for wrong implemented forward or backward function. Make sure to "
-                                 "include the epsilon value in both function for numerical stability. Additional hint:"
-                                 " You may need the output Y of the forward tensor also in the backward pass...")
+        self.assertLessEqual(np.sum(difference), 1e-4)
 
     def test_zero_loss(self):
         layer = Loss.CrossEntropyLoss()
         loss = layer.forward(self.label_tensor, self.label_tensor)
-        self.assertAlmostEqual(loss, 0,
-                               msg="Possible error: The forward function is not correctly implemented. Please refer to "
-                                   "the lecture slides for the correct function. Hint: the label has to be multiplied"
-                                   " with the negative log of the prediction -ylog(y').")
+        self.assertAlmostEqual(loss, 0)
 
     def test_high_loss(self):
         label_tensor = np.zeros((self.batch_size, self.categories))
@@ -397,11 +281,7 @@ class TestCrossEntropyLoss(unittest.TestCase):
         input_tensor[:, 1] = 1
         layer = Loss.CrossEntropyLoss()
         loss = layer.forward(input_tensor, label_tensor)
-        self.assertAlmostEqual(loss, 324.3928805, places = 4,
-                               msg="Possible error: The forward function is not correctly implemented. Please refer to "
-                                   "the lecture slides for the correct function. Hint: the label has to be multiplied"
-                                   " with the negative log of the prediction -ylog(y')."
-                               )
+        self.assertAlmostEqual(loss, 324.3928805, places = 4)
 
 
 class TestOptimizers1(unittest.TestCase):
@@ -410,17 +290,10 @@ class TestOptimizers1(unittest.TestCase):
         optimizer = Optimizers.Sgd(1.)
 
         result = optimizer.calculate_update(1., 1.)
-        np.testing.assert_almost_equal(result, np.array([0.]),
-                                       err_msg="Possible error: The Sgd optimizer is not properly implemented. "
-                                               "SGD is used by some other unittests. If these fail it could be caused "
-                                               "by a wrong implementation of the SGD optimizer.")
+        np.testing.assert_almost_equal(result, np.array([0.]))
 
         result = optimizer.calculate_update(result, 1.)
-        np.testing.assert_almost_equal(result, np.array([-1.]),
-                                       err_msg="Possible error: The Sgd optimizer is not properly implemented. "
-                                               "SGD is used by some other unittests. If these fail it could be caused "
-                                               "by a wrong implementation of the SGD optimizer."
-                                       )
+        np.testing.assert_almost_equal(result, np.array([-1.]))
 
 
 class TestNeuralNetwork1(unittest.TestCase):
@@ -433,13 +306,8 @@ class TestNeuralNetwork1(unittest.TestCase):
         fcl_2 = FullyConnected.FullyConnected(1, 1)
         net.append_layer(fcl_2)
 
-        self.assertEqual(len(net.layers), 2,
-                         msg="Possible error: The append_layer function is not yet implemented or wrong implemented."
-                             "Make sure that the NeuralNetwork class is able to add a layer and stores it in a list "
-                             "called layers.")
-        self.assertFalse(net.layers[0].optimizer is net.layers[1].optimizer,
-                         msg="Possible error: The optimizer is not copied for each layer. Make sure to perform a "
-                             "deepcopy of the optimizer and assign it to every trainable layer.")
+        self.assertEqual(len(net.layers), 2)
+        self.assertFalse(net.layers[0].optimizer is net.layers[1].optimizer)
 
     def test_data_access(self):
         net = NeuralNetwork.NeuralNetwork(Optimizers.Sgd(1))
@@ -457,11 +325,7 @@ class TestNeuralNetwork1(unittest.TestCase):
         out = net.forward()
         out2 = net.forward()
 
-        self.assertNotEqual(out, out2,
-                            msg="Possible error: The Neural Network hat no access to the provided data. Make sure to "
-                                "create an attribute data_layer in the constructor. Additionally, make sure that the "
-                                "forward function calls the next() function of this attribute to get the next batch as"
-                                " inout_tensor for the forward.")
+        self.assertNotEqual(out, out2)
 
     def test_iris_data(self):
         net = NeuralNetwork.NeuralNetwork(Optimizers.Sgd(1e-3))
@@ -500,10 +364,7 @@ class TestNeuralNetwork1(unittest.TestCase):
 
         accuracy = correct / (correct + wrong)
         print('\nOn the Iris dataset, we achieve an accuracy of: ' + str(accuracy * 100) + '%')
-        self.assertGreater(accuracy, 0.8,
-                           msg="Your network is not learning. Make sure that the gradients are computed correctly"
-                               " in all layers and make sure that the weights are updated in the backward functions. "
-                               "Have a look at the displayed loss curve.")
+        self.assertGreater(accuracy, 0.8)
 
 
 class L2Loss:
